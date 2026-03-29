@@ -1,0 +1,26 @@
+This is the metadata information for the features dataset.	
+A	Solidity
+B	Eccentricity
+C	EquivDiameter
+D	Extrema
+E	FilledArea
+F	Extent
+G	Orientation
+H	EulerNumber
+I	BoundingBox1
+J	BoundingBox2
+K	BoundingBox3
+L	BoundingBox4
+M	ConvexHull1
+N	ConvexHull2
+O	ConvexHull3
+P	ConvexHull4
+Q	MajorAxisLength
+R	MinorAxisLength
+S	Perimeter
+T	ConvexArea
+U	Centroid1
+V	Centroid2
+W	Area
+X	raddi
+Y	microorganism
