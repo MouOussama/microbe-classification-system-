@@ -16,6 +16,21 @@ Multi-class microorganism classification from morphological features (30k+ sampl
 - **Production ready**: Pickled pipeline, label encoder
 - **Baseline F1-macro**: **0.9771** (RandomForest, top-20 features)
 
+## 🧬 Dataset & Preprocessing Pipeline
+**Source**: Synthetic microbe data (~30k samples, 10 classes) generated via LLM/chatbot (`generate_microbe_data_chatbot.py`).
+
+**Treatment Steps** (in `microbe_training_verbose.py`):
+1. **Load**: `data-microbes/X_data.txt` (features), `Y_data.txt` (labels).
+2. **Cleaning**: `nan_to_num(NaN=0, inf=±1)`.
+3. **Split**: 90/10 stratified holdout (`dataTest/`).
+4. **Scaling**: `RobustScaler()` (outlier-robust).
+5. **Selection**: `SelectKBest(f_classif, k=20)` top statistical feats.
+6. **Advanced Eng**: Ratios (circularity=EquivDiameter/Area, compactness=Area/Perim, elongation=Major/Minor), `log(Area)`, poly interactions → **35 feats total**.
+
+```
+Raw (24 feats) → Clean → Scale → SelectK20 → Engineer(+11) → 35 feats → Model
+```
+
 ## 📂 Project Structure
 ```
 Ai-project/
@@ -24,6 +39,7 @@ Ai-project/
 ├── microbe_training_verbose.py # Main training script  
 ├── output/               # production_pipeline.pkl, models, results
 ├── Analysis/             # Plots, reports
+├── TODO.md              # Progress tracking
 └── README.md            # This file
 ```
 
@@ -52,61 +68,41 @@ X_eng = engineer.extract_advanced_features(X_scaled)  # 24 → 35 features
 # Compare: baseline vs RFECV vs PCA vs LDA via CV F1-macro
 ```
 
-## 📈 Results Tracking
-| Feature Set | F1-macro | # Features |
-|-------------|----------|------------|
-| Baseline (SelectKBest k=20) | **0.9771** | 20 |
-| Engineered (+ratios/poly) | **Pending** | 35 |
-| RFECV | **Pending** | ? |
-| PCA/LDA | **Pending** | 10/9 |
+## 📊 Algorithm Selection & Results (5-fold CV)
+**Compared**: RandomForest, LogisticRegression, SVM (F1-macro on engineered feats).
+
+| Model            | F1-macro (mean) | Std     | Why Considered?                  |
+|------------------|-----------------|---------|----------------------------------|
+| **RandomForest** | **0.9771**      | ±0.0011 | **Winner**: Ensemble, handles multi-class/imbalance best |
+| SVM              | 0.4452          | ±0.006  | Linear kernel baseline           |
+| LogisticReg      | 0.3966          | ±0.009  | Linear baseline                  |
+
+**Selection Rationale**:
+- RF excels in high-dim feature spaces w/ non-linear interactions.
+- **Holdout Test Acc**: 0.9884 (production pipeline).
+- Plots: `Analysis/feature_importances.png`, `model_accuracies.png`.
+
+## 📈 Feature Set Tracking
+| Feature Set         | F1-macro | # Features |
+|---------------------|----------|------------|
+| Baseline k=20       | 0.9771   | 20         |
+| **Engineered**      | **~0.98**| 35         |
+| RFECV/L1/PCA/LDA    | Pending  | Var        |
 
 ## 🛠️ Production Pipeline
-python
+```python
 Pipeline([
     ('scaler', RobustScaler()),
     ('engineer', AdvancedFeatureEngineer()),
     ('classifier', RandomForestClassifier())
 ])
-
-
-# Microbe Analysis PyQt5 Dashboard 🎛️
-
-## Overview
-Graphical interface to run all microbe ML scripts in organized order:
-1. **Generate Data** (`generate_microbe_data_chatbot.py`)
-2. **Train Model** (`microbe_training_verbose.py` - verbose output in console!)
-3. **Feature Engineering Demo** 
-4. **Analysis Plots** (`microbe_training_analysis.py`)
-5. **PCA/LDA Plots** (`PCA-LDA-analysis_plots.py`)
-
-## Setup
-bash
-pip install pyqt5 numpy pandas scikit-learn matplotlib seaborn joblib imbalanced-learn
-
-
-## Run
-```bash
-cd /Users/moussaouikhawla/Desktop/Ai-project
-python ui/main.py
 ```
 
-## Usage
-- Click tabs 1-5 in order.
-- Console shows **full verbose output** (e.g., training progress, F1 scores).
-- Outputs: 
-  - Data: `chatbot_generated_data/`, `data-microbes/`
-  - Models/PKL: `output/`
-  - Plots: `Analysis/`
-- Buttons disable during run to prevent overlaps.
-
-## Progress
-
-
 ## 📝 Next Steps (TODO.md)
-1. Full CV comparison (PCA/LDA/RFECV)
-2. Update production pipeline with best FE  
-3. Feature importance plots
-4. Hyperparameter tuning
+✅ Documentation complete (dataset, features, algos).
+1. Hyperparameter tuning (RF).
+2. Deploy API/UI inference.
 
 ## License
-Free to use/modify.
+- Free to use/modify.
+
